@@ -1,0 +1,12 @@
+node_modules/
+.expo/
+dist/
+android/
+ios/
+assets/
+package-lock.json
+expo-env.d.ts
+
+# 手で書いたドキュメントは整形対象外にする
+CLAUDE.md
+docs/
