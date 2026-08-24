@@ -11,6 +11,7 @@ export default function RootLayout() {
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="record/new" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="settings/budget" />
         </Stack>
         <StatusBar style="auto" />
       </ToastProvider>

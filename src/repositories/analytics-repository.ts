@@ -5,6 +5,7 @@ import type {
   CompanionSortKey,
   CompanionStat,
   CompanionTrendPoint,
+  DailyTotal,
   MonthlySummary,
   YearlySummary,
 } from '@/types/analytics';
@@ -96,6 +97,58 @@ export async function findMonthlySummary(month: string): Promise<MonthlySummary>
     homeAmount: row?.home_amount ?? 0,
     outAmount: row?.out_amount ?? 0,
   };
+}
+
+/**
+ * 期間内の日別合計（ストリーク判定用）。
+ * 記録のない日は行が返らない。呼び出し側で 0 円として扱う。
+ */
+export async function findDailyTotals(fromDate: string, toDate: string): Promise<DailyTotal[]> {
+  const db = await getDatabase();
+
+  const rows = await db.getAllAsync<{ date: string; total_amount: number }>(
+    `SELECT substr(spent_at, 1, 10) AS date,
+            SUM(amount)             AS total_amount
+     FROM records
+     WHERE substr(spent_at, 1, 10) BETWEEN ? AND ?
+     GROUP BY date
+     ORDER BY date`,
+    [fromDate, toDate],
+  );
+
+  return rows.map((row) => ({ date: row.date, totalAmount: row.total_amount }));
+}
+
+/**
+ * 指定月の「N日まで」の累計（前月同期比に使う）。
+ * 月全体と比べると進行中の月が不利になるため、同じ日数で切って比較する。
+ */
+export async function findMonthToDateTotal(month: string, dayOfMonth: number): Promise<number> {
+  const db = await getDatabase();
+
+  const row = await db.getFirstAsync<{ total_amount: number }>(
+    `SELECT COALESCE(SUM(amount), 0) AS total_amount
+     FROM records
+     WHERE strftime('%Y-%m', spent_at) = ?
+       AND CAST(strftime('%d', spent_at) AS INTEGER) <= ?`,
+    [month, dayOfMonth],
+  );
+
+  return row?.total_amount ?? 0;
+}
+
+/**
+ * 最初の記録の日付（'YYYY-MM-DD'）。記録が1件もなければ null。
+ * ストリークを記録開始前まで遡らせないための下限として使う。
+ */
+export async function findFirstRecordDate(): Promise<string | null> {
+  const db = await getDatabase();
+
+  const row = await db.getFirstAsync<{ first_date: string | null }>(
+    'SELECT substr(MIN(spent_at), 1, 10) AS first_date FROM records',
+  );
+
+  return row?.first_date ?? null;
 }
 
 /** カテゴリ別内訳。金額の大きい順。 */

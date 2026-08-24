@@ -12,6 +12,13 @@ export type MonthlySummary = {
   outAmount: number;
 };
 
+/** 日別の合計。ストリーク判定に使う。記録のある日だけ返る。 */
+export type DailyTotal = {
+  /** 'YYYY-MM-DD' */
+  date: string;
+  totalAmount: number;
+};
+
 /** カテゴリ別内訳。記録のあるカテゴリのみ返す。 */
 export type CategoryBreakdown = {
   category: Category;
