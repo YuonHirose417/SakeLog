@@ -60,7 +60,7 @@ CREATE TABLE records (
   drink_type  TEXT,                      -- 'beer' | 'sake' | 'wine' | 'highball' | 'other'
   is_solo     INTEGER NOT NULL DEFAULT 0,-- 1 = 一人で飲んだ
   memo        TEXT,
-  spent_at    TEXT    NOT NULL,          -- ISO8601
+  spent_at    TEXT    NOT NULL,          -- ISO8601（ローカル時刻・TZ指定子なし。下記注記を参照）
   created_at  TEXT    NOT NULL,
   updated_at  TEXT    NOT NULL
 );
@@ -68,6 +68,16 @@ CREATE TABLE records (
 CREATE INDEX idx_records_spent_at ON records(spent_at);
 CREATE INDEX idx_records_category ON records(category);
 ```
+
+#### spent_at の保存形式（重要）
+
+`spent_at` は**タイムゾーン指定子を持たないローカル時刻の ISO8601** で保存する。
+
+- 例：`2026-08-01T00:30:00`（`Z` や `+09:00` を付けない）
+- 理由：集計は `strftime('%Y-%m', spent_at)` で月を切るため、UTC で保存すると
+  日本時間 8/1 0:30 の記録が UTC では 7/31 となり、**深夜の記録が前月に集計されてしまう**
+- `created_at` / `updated_at` は集計に使わないため UTC（`Z` 付き）のままでよい
+- 変換は `src/lib/datetime.ts` の `toLocalIso()` に集約する
 
 ### 3.2 companions（同行者マスタ）
 
