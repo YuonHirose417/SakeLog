@@ -9,10 +9,10 @@
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.yourname.sakelog"
+      "bundleIdentifier": "com.yuonhirose.sakelog"
     },
     "android": {
-      "package": "com.yourname.sakelog",
+      "package": "com.yuonhirose.sakelog",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",

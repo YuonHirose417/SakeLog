@@ -5,7 +5,8 @@
 - 仕様：[docs/requirements.md](docs/requirements.md)
 - 実装規約：[CLAUDE.md](CLAUDE.md)（コードを書く前に必ず読むこと）
 
-現在の状態：**プロジェクト雛形のみ**。タブ4つの空ページまで。DB・状態管理・課金は未着手。
+現在の状態：**DB 層（スキーマ・マイグレーション・リポジトリ）まで実装済み**。
+画面はタブ4つの空ページのみ。状態管理・課金は未着手。
 
 ---
 
@@ -40,30 +41,42 @@ npm install
 npm start
 ```
 
-QR コードが表示されたら、実機の Expo Go または Development Build アプリで読み取ります。
+QR コードが表示されたら、実機の Development Build アプリで読み取ります。
 
-### Expo Go についての重要な注意
+### Expo Go では動きません
 
-**現時点ではまだ Expo Go で動作します**（ネイティブモジュールを未導入のため）。
-ただし要件定義の Phase 1 で `expo-sqlite` を、Phase 3 で `react-native-purchases` を導入した時点で
-**Expo Go では一切動かなくなります**（CLAUDE.md §7）。
-
-そのため、**DB 実装に着手する前に Development Build を作成しておくこと**を強く推奨します。
+`expo-sqlite` を導入済みのため、**Expo Go では起動しません**（CLAUDE.md §7）。
+実機で動かすには下記の Development Build が必要です。Phase 3 で `react-native-purchases` を
+入れると、この前提はさらに強くなります。
 
 ## Development Build の作成
 
 ```powershell
 npx eas-cli login
-npx eas-cli build:configure          # eas.json を生成（初回のみ）
+npx eas-cli init                     # 初回のみ。EAS プロジェクトを作成し app.json に projectId を追加する
 npx eas-cli build --profile development --platform android
 npx eas-cli build --profile development --platform ios
 ```
 
 ビルド完了後、生成された Development Build を実機にインストールし、以降は `npm start` で接続します。
 
-> **`app.json` の `bundleIdentifier` / `package` は `com.yourname.sakelog` というプレースホルダです。**
-> EAS ビルドを実行する前に、必ず自分の値に変更してください（RevenueCat の Product ID
-> `com.<yourname>.sakelog.pro` と整合させること）。
+`eas.json` はリポジトリに含めてあるため `build:configure` は不要です。
+
+### ビルドプロファイル
+
+| プロファイル  | 用途             | 内容                                                             |
+| ------------- | ---------------- | ---------------------------------------------------------------- |
+| `development` | 開発中の実機     | Development Build。internal 配布。iOS はシミュレータ用を作らない |
+| `preview`     | 動作確認用の配布 | 本番同等の挙動を internal 配布で確認する                         |
+| `production`  | ストア提出       | ビルド番号を自動採番（`autoIncrement`）                          |
+
+### アプリ ID
+
+| 項目                                       | 値                           |
+| ------------------------------------------ | ---------------------------- |
+| iOS `bundleIdentifier` / Android `package` | `com.yuonhirose.sakelog`     |
+| RevenueCat Product ID（Pro 買い切り）      | `com.yuonhirose.sakelog.pro` |
+| RevenueCat Entitlement                     | `pro`                        |
 
 ## npm scripts
 
@@ -95,7 +108,8 @@ src/
 docs/                要件定義書
 ```
 
-`src/` 配下は空ディレクトリのみ（`.gitkeep`）。詳細なルールは CLAUDE.md を参照。
+`db/` `repositories/` `types/` `lib/` は実装済み。`features/` `components/` `store/` は空。
+詳細なルールは CLAUDE.md を参照。
 
 ### `@/` エイリアス
 
