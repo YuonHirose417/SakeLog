@@ -27,6 +27,28 @@ export function toLocalIso(date: Date): string {
   return `${datePart}T${timePart}`;
 }
 
+/**
+ * n 日前の日付を、現在の時刻のまま spent_at 形式で返す。
+ * 記録画面の「今日 / 昨日 / 一昨日」チップで使う。
+ */
+export function localIsoDaysAgo(days: number): string {
+  const date = new Date();
+  date.setDate(date.getDate() - days);
+
+  return toLocalIso(date);
+}
+
+/** spent_at の文字列から 'M/D' を取り出す（履歴の見出しなどで使う）。 */
+export function toShortDateLabel(localIso: string): string {
+  const [year, month, day] = localIso.slice(0, 10).split('-');
+
+  if (year === undefined || month === undefined || day === undefined) {
+    return localIso;
+  }
+
+  return `${Number(month)}/${Number(day)}`;
+}
+
 /** Date から月キー 'YYYY-MM' を作る（ローカル時刻基準）。 */
 export function toMonthKey(date: Date): string {
   return toLocalIso(date).slice(0, 7);
