@@ -2,6 +2,8 @@ import { useState } from 'react';
 
 import { Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 
+import { CompanionInput } from '@/features/companions/CompanionInput';
+
 import { SegmentedControl } from '@/components/SegmentedControl';
 
 import { formatYen, parseAmountDigits } from '@/lib/currency';
@@ -23,6 +25,7 @@ export type RecordFormValues = {
   isSolo: boolean;
   memo: string;
   spentAt: string;
+  companionNames: string[];
 };
 
 type RecordFormProps = {
@@ -57,8 +60,32 @@ export function RecordForm({
   const [drinkType, setDrinkType] = useState<DrinkType | null>(initialValues?.drinkType ?? null);
   const [isSolo, setIsSolo] = useState(initialValues?.isSolo ?? false);
   const [memo, setMemo] = useState(initialValues?.memo ?? '');
+  const [companionNames, setCompanionNames] = useState<string[]>(
+    initialValues?.companionNames ?? [],
+  );
 
   const canSubmit = amount > 0 && category !== null && !submitting;
+
+  /**
+   * 「一人で飲んだ」と同行者は相互排他にする。
+   * リポジトリ層は is_solo のとき同行者を保存しないので、
+   * UI 側で先に打ち消しておかないと入力した名前が黙って消えることになる。
+   */
+  const handleSoloChange = (next: boolean) => {
+    setIsSolo(next);
+
+    if (next) {
+      setCompanionNames([]);
+    }
+  };
+
+  const handleCompanionsChange = (names: string[]) => {
+    setCompanionNames(names);
+
+    if (names.length > 0) {
+      setIsSolo(false);
+    }
+  };
 
   const handleSubmit = () => {
     if (category === null || amount <= 0) {
@@ -72,8 +99,33 @@ export function RecordForm({
       isSolo,
       memo: memo.trim().length === 0 ? null : memo.trim(),
       spentAt,
+      companionNames,
     });
   };
+
+  // 外飲みのときは常に見せる。誰かを選んでいる場合も、折りたたみに隠れないよう常に見せる。
+  const showCompanionInline = category === 'bar' || companionNames.length > 0;
+
+  // 「誰と」と「一人で飲んだ」は相互排他なので、同じ視界に並べて置く。
+  // 配置が任意項目の中に移るときも、この2つは一緒に移動する。
+  const companionField = (
+    <View style={styles.field}>
+      <View style={styles.fieldHeaderRow}>
+        <Text style={styles.fieldLabel}>誰と</Text>
+
+        <View style={styles.soloToggle}>
+          <Text style={styles.fieldLabel}>一人で飲んだ</Text>
+          <Switch
+            value={isSolo}
+            onValueChange={handleSoloChange}
+            accessibilityLabel="一人で飲んだ"
+          />
+        </View>
+      </View>
+
+      <CompanionInput value={companionNames} onChange={handleCompanionsChange} disabled={isSolo} />
+    </View>
+  );
 
   return (
     <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
@@ -101,6 +153,8 @@ export function RecordForm({
           label="カテゴリ"
         />
       </View>
+
+      {showCompanionInline && companionField}
 
       <View style={styles.field}>
         <Text style={styles.fieldLabel}>日付</Text>
@@ -132,12 +186,14 @@ export function RecordForm({
         accessibilityState={{ expanded: optionalOpen }}
       >
         <Text style={styles.disclosureText}>
-          {optionalOpen ? '任意項目を閉じる' : '任意項目を追加（酒種・メモなど）'}
+          {optionalOpen ? '任意項目を閉じる' : '任意項目を追加（酒種・メモ）'}
         </Text>
       </Pressable>
 
       {optionalOpen && (
         <View style={styles.optionalSection}>
+          {!showCompanionInline && companionField}
+
           <View style={styles.field}>
             <Text style={styles.fieldLabel}>酒種</Text>
             <SegmentedControl
@@ -146,11 +202,6 @@ export function RecordForm({
               onChange={setDrinkType}
               label="酒種"
             />
-          </View>
-
-          <View style={styles.switchRow}>
-            <Text style={styles.fieldLabel}>一人で飲んだ</Text>
-            <Switch value={isSolo} onValueChange={setIsSolo} accessibilityLabel="一人で飲んだ" />
           </View>
 
           <View style={styles.field}>
@@ -240,7 +291,8 @@ const styles = StyleSheet.create({
   disclosure: { minHeight: 44, justifyContent: 'center' },
   disclosureText: { fontSize: 14, color: '#1D4ED8' },
   optionalSection: { gap: 24 },
-  switchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  fieldHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  soloToggle: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   memoInput: {
     minHeight: 48,
     paddingHorizontal: 12,

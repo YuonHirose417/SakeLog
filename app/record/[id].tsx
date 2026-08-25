@@ -103,6 +103,7 @@ export default function EditRecordScreen() {
             isSolo: record.isSolo,
             memo: record.memo ?? '',
             spentAt: record.spentAt,
+            companionNames: record.companions.map((companion) => companion.name),
           }}
           onSubmit={(input) => void handleSubmit(input)}
           submitting={saving}

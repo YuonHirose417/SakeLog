@@ -139,21 +139,43 @@ async function attachCompanions(
 /**
  * 同行者名を UPSERT して記録に紐づける。
  * 「一人で飲んだ」記録には同行者を作らない（要件定義 §4.2 / CLAUDE.md §7）。
+ *
+ * alreadyLinked に含まれる名前は use_count を増やさない。
+ * 編集保存で紐づけを貼り直すとき、元から紐づいていた人の回数が水増しされるのを防ぐ。
  */
 async function linkCompanions(
   db: SQLiteDatabase,
   recordId: number,
   names: readonly string[],
   spentAt: string,
+  alreadyLinked: ReadonlySet<string> = new Set(),
 ): Promise<void> {
   for (const name of names) {
-    const companionId = await upsertCompanionByName(name, spentAt, db);
+    const companionId = await upsertCompanionByName(name, spentAt, db, {
+      incrementUseCount: !alreadyLinked.has(name),
+    });
 
     await db.runAsync(
       'INSERT OR IGNORE INTO record_companions (record_id, companion_id) VALUES (?, ?)',
       [recordId, companionId],
     );
   }
+}
+
+/** その記録に現在紐づいている同行者名。編集時に「新規に増えた人」を判定するために使う。 */
+async function findLinkedCompanionNames(
+  db: SQLiteDatabase,
+  recordId: number,
+): Promise<Set<string>> {
+  const rows = await db.getAllAsync<{ name: string }>(
+    `SELECT c.name
+     FROM record_companions rc
+     JOIN companions c ON c.id = rc.companion_id
+     WHERE rc.record_id = ?`,
+    [recordId],
+  );
+
+  return new Set(rows.map((row) => row.name));
 }
 
 /**
@@ -218,8 +240,11 @@ export async function updateRecord(id: number, input: SpendingRecordInput): Prom
       ],
     );
 
+    // 貼り直す前に控えておき、元から紐づいていた人の use_count を増やさないようにする
+    const alreadyLinked = await findLinkedCompanionNames(db, id);
+
     await db.runAsync('DELETE FROM record_companions WHERE record_id = ?', [id]);
-    await linkCompanions(db, id, names, input.spentAt);
+    await linkCompanions(db, id, names, input.spentAt, alreadyLinked);
   });
 }
 

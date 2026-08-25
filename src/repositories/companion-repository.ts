@@ -29,24 +29,35 @@ function toCompanion(row: CompanionRow): Companion {
  * 完全一致のみ同一人物として扱う。表記ゆれの統合は mergeCompanions で行う。
  *
  * 記録の保存と同じトランザクションに乗せるため、呼び出し側が db を渡せるようにしている。
+ *
+ * incrementUseCount を false にすると use_count を据え置き、last_used_at だけ更新する。
+ * 既存の記録を編集保存したときに、既に紐づいている同行者の回数が二重に増えるのを防ぐため
+ * （同じ記録を3回編集しても「一緒に飲んだ回数」は増えない）。
  */
 export async function upsertCompanionByName(
   name: string,
   usedAt: string,
   db: SQLiteDatabase,
+  options: { incrementUseCount?: boolean } = {},
 ): Promise<number> {
   const trimmed = name.trim();
+  const { incrementUseCount = true } = options;
 
   if (trimmed.length === 0) {
     throw new Error('同行者名が空です');
   }
 
   await db.runAsync(
-    `INSERT INTO companions (name, use_count, last_used_at, created_at)
-     VALUES (?, 1, ?, ?)
-     ON CONFLICT(name) DO UPDATE SET
-       use_count    = use_count + 1,
-       last_used_at = excluded.last_used_at`,
+    incrementUseCount
+      ? `INSERT INTO companions (name, use_count, last_used_at, created_at)
+         VALUES (?, 1, ?, ?)
+         ON CONFLICT(name) DO UPDATE SET
+           use_count    = use_count + 1,
+           last_used_at = excluded.last_used_at`
+      : `INSERT INTO companions (name, use_count, last_used_at, created_at)
+         VALUES (?, 1, ?, ?)
+         ON CONFLICT(name) DO UPDATE SET
+           last_used_at = excluded.last_used_at`,
     [trimmed, usedAt, nowIso()],
   );
 

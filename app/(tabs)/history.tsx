@@ -82,10 +82,12 @@ export default function HistoryScreen() {
             >
               <View style={styles.rowMain}>
                 <Text style={styles.rowAmount}>¥{formatYen(item.amount)}</Text>
-                <Text style={styles.rowMeta}>
+                <Text style={styles.rowMeta} numberOfLines={1}>
                   {CATEGORY_LABELS[item.category]}
                   {item.drinkType !== null && ` ・ ${DRINK_TYPE_LABELS[item.drinkType]}`}
                   {item.isSolo && ' ・ 一人'}
+                  {item.companions.length > 0 &&
+                    ` ・ ${item.companions.map((companion) => companion.name).join(', ')}`}
                 </Text>
               </View>
 
@@ -145,7 +147,8 @@ const styles = StyleSheet.create({
   },
   rowMain: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
   rowAmount: { fontSize: 17, fontWeight: '600', color: '#18181B' },
-  rowMeta: { fontSize: 13, color: '#71717A' },
+  // 同行者が多いときに金額を押し出さないよう、メタ情報側を縮める
+  rowMeta: { flexShrink: 1, marginLeft: 12, fontSize: 13, color: '#71717A', textAlign: 'right' },
   rowMemo: { fontSize: 12, color: '#A1A1AA' },
   footer: { paddingVertical: 16 },
 });
