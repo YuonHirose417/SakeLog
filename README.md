@@ -5,8 +5,8 @@
 - 仕様：[docs/requirements.md](docs/requirements.md)
 - 実装規約：[CLAUDE.md](CLAUDE.md)（コードを書く前に必ず読むこと）
 
-現在の状態：**DB 層（スキーマ・マイグレーション・リポジトリ）まで実装済み**。
-画面はタブ4つの空ページのみ。状態管理・課金は未着手。
+現在の状態：記録・予算・履歴・同行者・分析（月次/年次）と、課金の導線まで実装済み。
+残りは**無料版の機能制限**、同行者管理・プリセット管理の画面、CSV エクスポート。
 
 ---
 
@@ -33,7 +33,33 @@
 
 ```powershell
 npm install
+Copy-Item .env.example .env    # RevenueCat のキーを入れる
 ```
+
+### 環境変数（RevenueCat）
+
+`.env.example` を `.env` にコピーし、RevenueCat ダッシュボードの
+Project settings > API keys から取得した**公開鍵**を入れてください。
+
+| 変数                         | 用途                        |
+| ---------------------------- | --------------------------- |
+| `REVENUECAT_IOS_API_KEY`     | iOS（`appl_` で始まる）     |
+| `REVENUECAT_ANDROID_API_KEY` | Android（`goog_` で始まる） |
+
+`.env` は `.gitignore` 済みでコミットされません。
+**未設定でもアプリは起動します**（課金機能だけが無効になり、Paywall は購入不可の表示になります）。
+
+> **EAS Build はローカルの `.env` を読みません。**
+> ビルドにキーを含めるには EAS 側にも登録が必要です。忘れるとキーが空のままビルドされます。
+>
+> ```powershell
+> npx eas-cli env:create --name REVENUECAT_IOS_API_KEY --value appl_xxx --environment production
+> npx eas-cli env:create --name REVENUECAT_ANDROID_API_KEY --value goog_xxx --environment production
+> ```
+>
+> `development` / `preview` プロファイルでも使う場合は `--environment` を変えて同様に登録します。
+
+なお `app.json` は静的設定、`app.config.ts` が環境変数を `extra.revenueCat` に載せる役割です。
 
 ## 開発サーバの起動
 
@@ -45,9 +71,9 @@ QR コードが表示されたら、実機の Development Build アプリで読�
 
 ### Expo Go では動きません
 
-`expo-sqlite` を導入済みのため、**Expo Go では起動しません**（CLAUDE.md §7）。
-実機で動かすには下記の Development Build が必要です。Phase 3 で `react-native-purchases` を
-入れると、この前提はさらに強くなります。
+`expo-sqlite` と `react-native-purchases` を導入済みのため、**Expo Go では起動しません**（CLAUDE.md §7）。
+実機で動かすには下記の Development Build が必要です。
+ネイティブモジュールを追加・更新したときは、**dev build を作り直してください**。
 
 ## Development Build の作成
 
@@ -108,7 +134,7 @@ src/
 docs/                要件定義書
 ```
 
-`db/` `repositories/` `types/` `lib/` は実装済み。`features/` `components/` `store/` は空。
+`features/` の内訳：`records` / `budget` / `companions` / `analytics` / `billing`。
 詳細なルールは CLAUDE.md を参照。
 
 ### `@/` エイリアス
@@ -123,11 +149,12 @@ TypeScript の `paths` と ESLint の import リゾルバの両方に設定済�
 
 ### ESLint による規約の強制
 
-設定ファイル `eslint.config.js` では、CLAUDE.md の規約のうち次の3点を機械的に検査します。
+設定ファイル `eslint.config.js` では、CLAUDE.md の規約のうち次の点を機械的に検査します。
 
 - **import 順**：React/RN → 外部 → `@/` 内部（db → repositories → features → components → store → lib → types）→ 相対 → 型のみ。グループ間は空行必須
 - **`any` 禁止**：`@typescript-eslint/no-explicit-any`
 - **DB アクセスの隔離**：`expo-sqlite` の import は `src/db/` と `src/repositories/` 以外で禁止
+- **課金 SDK の隔離**：`react-native-purchases` の import は `src/features/billing/` 以外で禁止
 
 ## トラブルシューティング
 

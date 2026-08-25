@@ -68,6 +68,10 @@ module.exports = defineConfig([
               name: 'expo-sqlite',
               message: 'DB アクセスは src/repositories/ 経由にしてください（CLAUDE.md §6）。',
             },
+            {
+              name: 'react-native-purchases',
+              message: '課金の処理は src/features/billing/ 経由にしてください。',
+            },
           ],
           patterns: [
             {
@@ -81,7 +85,12 @@ module.exports = defineConfig([
   },
 
   {
-    files: ['src/db/**/*.{ts,tsx}', 'src/repositories/**/*.{ts,tsx}'],
+    // DB 層と課金層だけは、それぞれの SDK を直接触ってよい
+    files: [
+      'src/db/**/*.{ts,tsx}',
+      'src/repositories/**/*.{ts,tsx}',
+      'src/features/billing/**/*.{ts,tsx}',
+    ],
     rules: {
       'no-restricted-imports': 'off',
     },
