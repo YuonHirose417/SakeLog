@@ -304,9 +304,11 @@ export async function findYearlySummary(year: string): Promise<YearlySummary> {
     [year],
   );
 
-  const [mostFrequent] = await findCompanionRankingByYear(year, { sortKey: 'total', limit: 1 });
+  // 合計額（total）が最大 = 最も高くついた相手
+  const [mostExpensive] = await findCompanionRankingByYear(year, { sortKey: 'total', limit: 1 });
 
-  const byVisits = await db.getFirstAsync<CompanionStatRow>(
+  // 回数（visit_count）が最大 = 最も回数の多かった相手
+  const mostFrequent = await db.getFirstAsync<CompanionStatRow>(
     `SELECT
        c.id,
        c.name,
@@ -327,7 +329,7 @@ export async function findYearlySummary(year: string): Promise<YearlySummary> {
     year,
     totalAmount: totals?.total_amount ?? 0,
     recordCount: totals?.record_count ?? 0,
-    mostFrequentCompanion: byVisits === null ? null : toCompanionStat(byVisits),
-    mostExpensiveCompanion: mostFrequent ?? null,
+    mostFrequentCompanion: mostFrequent === null ? null : toCompanionStat(mostFrequent),
+    mostExpensiveCompanion: mostExpensive ?? null,
   };
 }

@@ -71,6 +71,11 @@ export function shiftMonth(month: string, delta: number): string {
   return `${date.getFullYear()}-${`${date.getMonth() + 1}`.padStart(2, '0')}`;
 }
 
+/** 年キー 'YYYY' を delta 年ずらす。 */
+export function shiftYear(year: string, delta: number): string {
+  return `${Number(year) + delta}`;
+}
+
 /** spent_at の文字列から月キー 'YYYY-MM' を取り出す。 */
 export function monthKeyOf(localIso: string): string {
   return localIso.slice(0, 7);

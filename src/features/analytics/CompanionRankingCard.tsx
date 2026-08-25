@@ -7,12 +7,20 @@ import { formatYen } from '@/lib/currency';
 import type { CompanionSortKey, CompanionStat } from '@/types/analytics';
 
 type CompanionRankingCardProps = {
+  /** 見出し。月次「誰と飲んだか」／年次「誰と飲んだか（年間）」。 */
+  title: string;
   stats: CompanionStat[];
   loading: boolean;
   sortKey: CompanionSortKey;
   onSortKeyChange: (key: CompanionSortKey) => void;
   minVisitsOnly: boolean;
   onMinVisitsOnlyChange: (value: boolean) => void;
+  /**
+   * 無料版で隠されている人数。
+   * Phase 3 で「上位3人まで」の制限を入れるときに、ここへ隠した人数を渡して
+   * ぼかし行と Paywall 導線を出す。今回は常に 0。
+   */
+  lockedCount?: number;
 };
 
 const SORT_OPTIONS: readonly { value: CompanionSortKey; label: string }[] = [
@@ -29,16 +37,18 @@ const SORT_OPTIONS: readonly { value: CompanionSortKey; label: string }[] = [
  * 回数は必ず併記する（1回だけの相手が平均額トップに来る誤解を防ぐため）。
  */
 export function CompanionRankingCard({
+  title,
   stats,
   loading,
   sortKey,
   onSortKeyChange,
   minVisitsOnly,
   onMinVisitsOnlyChange,
+  lockedCount = 0,
 }: CompanionRankingCardProps) {
   return (
     <View style={styles.card}>
-      <Text style={styles.heading}>誰と飲んだか</Text>
+      <Text style={styles.heading}>{title}</Text>
       <Text style={styles.disclaimer}>※ 合計は総支出と一致しません</Text>
 
       <View style={styles.controls}>
@@ -97,6 +107,9 @@ export function CompanionRankingCard({
           </View>
         ))
       )}
+
+      {/* Phase 3: 無料版で隠した人数をここに出し、タップで Paywall へ誘導する */}
+      {lockedCount > 0 && <Text style={styles.locked}>他 {lockedCount} 人</Text>}
     </View>
   );
 }
@@ -142,4 +155,5 @@ const styles = StyleSheet.create({
   rowRight: { alignItems: 'flex-end' },
   amount: { fontSize: 15, fontWeight: '600', color: '#18181B' },
   meta: { fontSize: 12, color: '#71717A' },
+  locked: { paddingTop: 10, fontSize: 13, color: '#71717A' },
 });
