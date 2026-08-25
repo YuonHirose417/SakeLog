@@ -1,0 +1,12 @@
+title: 飲み代家計簿
+description: お酒の支出に特化した家計簿アプリ
+
+# GitHub Pages の標準テーマ
+theme: jekyll-theme-minimal
+
+# project site（https://yuonhirose417.github.io/SakeLog/）なのでサブパス配下になる。
+# これがないと relative_url を使ったリンクがドメイン直下を指してしまう。
+baseurl: /SakeLog
+
+# 拡張子なしの URL にする（/privacy-policy/ の形）
+permalink: pretty
