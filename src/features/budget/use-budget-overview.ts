@@ -19,7 +19,7 @@ import {
 
 import { useDataRevision } from '@/store/use-app-store';
 
-import { toLocalIso } from '@/lib/datetime';
+import { shiftMonth, toLocalIso } from '@/lib/datetime';
 
 export type BudgetOverview = {
   /** 'YYYY-MM' */
@@ -48,14 +48,6 @@ type UseBudgetOverviewResult = {
   reload: () => void;
 };
 
-function previousMonthOf(month: string): string {
-  const [year, monthPart] = month.split('-').map(Number);
-  const date = new Date(year ?? 1970, (monthPart ?? 1) - 1, 1);
-  date.setMonth(date.getMonth() - 1);
-
-  return `${date.getFullYear()}-${`${date.getMonth() + 1}`.padStart(2, '0')}`;
-}
-
 /**
  * ホームに出す予算まわりの数字をまとめて返す（要件定義 §4.3 / §6.1）。
  *
@@ -81,7 +73,7 @@ export function useBudgetOverview(): UseBudgetOverviewResult {
       try {
         const today = toLocalIso(new Date()).slice(0, 10);
         const month = today.slice(0, 7);
-        const previousMonth = previousMonthOf(month);
+        const previousMonth = shiftMonth(month, -1);
         const elapsedDays = elapsedDaysOf(today);
 
         const [summary, budget, previousMonthToDate, dailyTotals, firstRecordDate] =

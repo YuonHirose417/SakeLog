@@ -59,6 +59,18 @@ export function toYearKey(date: Date): string {
   return toLocalIso(date).slice(0, 4);
 }
 
+/**
+ * 月キー 'YYYY-MM' を delta ヶ月ずらす。年をまたいでも正しく計算する。
+ * 例：shiftMonth('2026-01', -1) === '2025-12'
+ */
+export function shiftMonth(month: string, delta: number): string {
+  const [year, monthPart] = month.split('-').map(Number);
+  const date = new Date(year ?? 1970, (monthPart ?? 1) - 1, 1);
+  date.setMonth(date.getMonth() + delta);
+
+  return `${date.getFullYear()}-${`${date.getMonth() + 1}`.padStart(2, '0')}`;
+}
+
 /** spent_at の文字列から月キー 'YYYY-MM' を取り出す。 */
 export function monthKeyOf(localIso: string): string {
   return localIso.slice(0, 7);
