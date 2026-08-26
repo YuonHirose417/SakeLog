@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { router } from 'expo-router';
 
 import { CategoryBreakdownCard } from '@/features/analytics/CategoryBreakdownCard';
 import { CompanionRankingCard } from '@/features/analytics/CompanionRankingCard';
@@ -14,8 +15,11 @@ import { useCompanionRanking } from '@/features/analytics/use-companion-ranking'
 import { useCompanionRankingControls } from '@/features/analytics/use-companion-ranking-controls';
 import { useMonthlyAnalytics } from '@/features/analytics/use-monthly-analytics';
 import { useYearlyAnalytics } from '@/features/analytics/use-yearly-analytics';
+import { ProLockCard } from '@/features/billing/ProLockCard';
 
 import { SegmentedControl } from '@/components/SegmentedControl';
+
+import { useIsPro } from '@/store/use-app-store';
 
 import { shiftMonth, shiftYear, toMonthKey, toYearKey } from '@/lib/datetime';
 import type { Option } from '@/lib/labels';
@@ -29,13 +33,24 @@ const TAB_OPTIONS: readonly Option<AnalyticsTab>[] = [
 
 export default function AnalyticsScreen() {
   const [tab, setTab] = useState<AnalyticsTab>('month');
+  const isPro = useIsPro();
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <SegmentedControl options={TAB_OPTIONS} value={tab} onChange={setTab} label="集計の期間" />
 
-      {/* Phase 3: 年次サマリーは Pro 限定なので、この分岐にガードを入れる */}
-      {tab === 'month' ? <MonthlyTab /> : <YearlyTab />}
+      {tab === 'month' ? (
+        <MonthlyTab />
+      ) : isPro ? (
+        <YearlyTab />
+      ) : (
+        // 年次サマリーは Pro 限定（要件定義 §5.2）。
+        // タブの切り替え自体は妨げず、中身をロック表示にして内容を伝える
+        <ProLockCard
+          title="年次サマリーは Pro 限定です"
+          description="1年間の総支出、月別の推移、最も回数の多かった相手・最も高くついた相手が見られます。"
+        />
+      )}
     </ScrollView>
   );
 }
@@ -43,15 +58,16 @@ export default function AnalyticsScreen() {
 function MonthlyTab() {
   const currentMonth = toMonthKey(new Date());
   const [month, setMonth] = useState(currentMonth);
-  const { sortKey, minVisitsOnly, setSortKey, setMinVisitsOnly } = useCompanionRankingControls();
+  const { sortKey, minVisitsOnly, setSortKey, setMinVisitsOnly, averageSortLocked } =
+    useCompanionRankingControls();
 
   const { summary, breakdown, loading } = useMonthlyAnalytics(month);
-  // Phase 3: 無料版の「上位3人まで」は第4引数に { limit: 3 } を渡して実現する
-  const { stats, loading: rankingLoading } = useCompanionRanking(
-    { type: 'month', key: month },
-    sortKey,
-    minVisitsOnly,
-  );
+  // 無料版の「上位3人まで」は hook の中で切り分ける（lockedCount に隠した人数が返る）
+  const {
+    stats,
+    lockedCount,
+    loading: rankingLoading,
+  } = useCompanionRanking({ type: 'month', key: month }, sortKey, minVisitsOnly);
 
   return (
     <>
@@ -82,6 +98,9 @@ function MonthlyTab() {
         onSortKeyChange={setSortKey}
         minVisitsOnly={minVisitsOnly}
         onMinVisitsOnlyChange={setMinVisitsOnly}
+        lockedCount={lockedCount}
+        averageSortLocked={averageSortLocked}
+        onLockedPress={() => router.push('/paywall')}
       />
     </>
   );
@@ -90,15 +109,16 @@ function MonthlyTab() {
 function YearlyTab() {
   const currentYear = toYearKey(new Date());
   const [year, setYear] = useState(currentYear);
-  const { sortKey, minVisitsOnly, setSortKey, setMinVisitsOnly } = useCompanionRankingControls();
+  const { sortKey, minVisitsOnly, setSortKey, setMinVisitsOnly, averageSortLocked } =
+    useCompanionRankingControls();
 
   const { summary, trend, loading } = useYearlyAnalytics(year);
-  // Phase 3: 無料版の「上位3人まで」は第4引数に { limit: 3 } を渡して実現する
-  const { stats, loading: rankingLoading } = useCompanionRanking(
-    { type: 'year', key: year },
-    sortKey,
-    minVisitsOnly,
-  );
+  // 無料版の「上位3人まで」は hook の中で切り分ける（lockedCount に隠した人数が返る）
+  const {
+    stats,
+    lockedCount,
+    loading: rankingLoading,
+  } = useCompanionRanking({ type: 'year', key: year }, sortKey, minVisitsOnly);
 
   return (
     <>
@@ -128,6 +148,9 @@ function YearlyTab() {
         onSortKeyChange={setSortKey}
         minVisitsOnly={minVisitsOnly}
         onMinVisitsOnlyChange={setMinVisitsOnly}
+        lockedCount={lockedCount}
+        averageSortLocked={averageSortLocked}
+        onLockedPress={() => router.push('/paywall')}
       />
     </>
   );

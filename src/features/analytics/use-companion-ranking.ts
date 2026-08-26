@@ -5,7 +5,9 @@ import {
   findCompanionRankingByYear,
 } from '@/repositories/analytics-repository';
 
-import { useDataRevision } from '@/store/use-app-store';
+import { splitRankingForPlan } from '@/features/billing/plan-limits';
+
+import { useDataRevision, useIsPro } from '@/store/use-app-store';
 
 import type { CompanionSortKey, CompanionStat } from '@/types/analytics';
 
@@ -25,7 +27,10 @@ type UseCompanionRankingOptions = {
 };
 
 type UseCompanionRankingResult = {
+  /** 実際に表示する行。無料版は上位3人まで。 */
   stats: CompanionStat[];
+  /** 無料版で隠れている人数。0 ならロック表示を出さない。 */
+  lockedCount: number;
   loading: boolean;
   error: string | null;
 };
@@ -46,6 +51,7 @@ export function useCompanionRanking(
   options: UseCompanionRankingOptions = {},
 ): UseCompanionRankingResult {
   const dataRevision = useDataRevision();
+  const isPro = useIsPro();
   const [stats, setStats] = useState<CompanionStat[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -94,5 +100,8 @@ export function useCompanionRanking(
     };
   }, [scopeType, scopeKey, sortKey, minVisitsOnly, limit, dataRevision]);
 
-  return { stats, loading, error };
+  // 無料版は上位3人まで。「他 N 人」を出すため総数が必要なので、SQL の LIMIT ではなくここで切る
+  const { visible, lockedCount } = splitRankingForPlan(stats, isPro);
+
+  return { stats: visible, lockedCount, loading, error };
 }

@@ -286,22 +286,55 @@ export async function findRecordsByMonth(month: string): Promise<SpendingRecordW
   return attachCompanions(db, rows.map(toRecord));
 }
 
-/** 履歴一覧用。新しい順にページングして返す。 */
+/**
+ * 履歴一覧用。新しい順にページングして返す。
+ *
+ * sinceMonth（'YYYY-MM'）を渡すと、その月以降だけに絞る。
+ * 無料版の「直近3ヶ月まで」の制限で使う。
+ */
 export async function findRecentRecords(
   limit: number,
   offset = 0,
+  sinceMonth?: string,
 ): Promise<SpendingRecordWithCompanions[]> {
   const db = await getDatabase();
 
-  const rows = await db.getAllAsync<RecordRow>(
-    `SELECT ${RECORD_COLUMNS}
-     FROM records
-     ORDER BY spent_at DESC, id DESC
-     LIMIT ? OFFSET ?`,
-    [limit, offset],
-  );
+  const rows =
+    sinceMonth === undefined
+      ? await db.getAllAsync<RecordRow>(
+          `SELECT ${RECORD_COLUMNS}
+           FROM records
+           ORDER BY spent_at DESC, id DESC
+           LIMIT ? OFFSET ?`,
+          [limit, offset],
+        )
+      : await db.getAllAsync<RecordRow>(
+          `SELECT ${RECORD_COLUMNS}
+           FROM records
+           WHERE strftime('%Y-%m', spent_at) >= ?
+           ORDER BY spent_at DESC, id DESC
+           LIMIT ? OFFSET ?`,
+          [sinceMonth, limit, offset],
+        );
 
   return attachCompanions(db, rows.map(toRecord));
+}
+
+/**
+ * 指定月より前の記録の件数。
+ * 無料版のロック行に「これ以前の N 件」を出すために使う。
+ */
+export async function countRecordsBeforeMonth(month: string): Promise<number> {
+  const db = await getDatabase();
+
+  const row = await db.getFirstAsync<{ total: number }>(
+    `SELECT COUNT(*) AS total
+     FROM records
+     WHERE strftime('%Y-%m', spent_at) < ?`,
+    [month],
+  );
+
+  return row?.total ?? 0;
 }
 
 /**

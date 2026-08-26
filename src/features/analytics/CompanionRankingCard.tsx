@@ -15,12 +15,12 @@ type CompanionRankingCardProps = {
   onSortKeyChange: (key: CompanionSortKey) => void;
   minVisitsOnly: boolean;
   onMinVisitsOnlyChange: (value: boolean) => void;
-  /**
-   * 無料版で隠されている人数。
-   * Phase 3 で「上位3人まで」の制限を入れるときに、ここへ隠した人数を渡して
-   * ぼかし行と Paywall 導線を出す。今回は常に 0。
-   */
+  /** 無料版で隠されている人数。0 より大きいとき、ぼかし行と Paywall 導線を出す。 */
   lockedCount?: number;
+  /** 平均額ソートが Pro 限定でロックされているか。 */
+  averageSortLocked?: boolean;
+  /** ロックされた要素がタップされたとき（Paywall へ遷移する）。 */
+  onLockedPress?: () => void;
 };
 
 const SORT_OPTIONS: readonly { value: CompanionSortKey; label: string }[] = [
@@ -45,6 +45,8 @@ export function CompanionRankingCard({
   minVisitsOnly,
   onMinVisitsOnlyChange,
   lockedCount = 0,
+  averageSortLocked = false,
+  onLockedPress,
 }: CompanionRankingCardProps) {
   return (
     <View style={styles.card}>
@@ -55,17 +57,26 @@ export function CompanionRankingCard({
         <View style={styles.sortGroup} accessibilityRole="radiogroup" accessibilityLabel="並び替え">
           {SORT_OPTIONS.map((option) => {
             const selected = option.value === sortKey;
+            // 平均額ソートは Pro 限定。ロック中はタップで Paywall へ誘導する
+            const locked = option.value === 'average' && averageSortLocked;
 
             return (
               <Pressable
                 key={option.value}
-                onPress={() => onSortKeyChange(option.value)}
+                onPress={() => (locked ? onLockedPress?.() : onSortKeyChange(option.value))}
                 style={[styles.sortButton, selected && styles.sortButtonSelected]}
                 accessibilityRole="radio"
                 accessibilityState={{ selected }}
+                accessibilityLabel={locked ? `${option.label}（Pro 限定）` : option.label}
               >
-                <Text style={[styles.sortLabel, selected && styles.sortLabelSelected]}>
-                  {option.label}
+                <Text
+                  style={[
+                    styles.sortLabel,
+                    selected && styles.sortLabelSelected,
+                    locked && styles.sortLabelLocked,
+                  ]}
+                >
+                  {locked ? `${option.label} 🔒` : option.label}
                 </Text>
               </Pressable>
             );
@@ -108,8 +119,28 @@ export function CompanionRankingCard({
         ))
       )}
 
-      {/* Phase 3: 無料版で隠した人数をここに出し、タップで Paywall へ誘導する */}
-      {lockedCount > 0 && <Text style={styles.locked}>他 {lockedCount} 人</Text>}
+      {/*
+        無料版で隠れている人。名前と金額は伏せ、タップして初めて Paywall へ進む。
+        本物のブラー（expo-blur）はネイティブ依存が増えるため使わず、
+        伏せ字と透明度で表現している。
+      */}
+      {lockedCount > 0 && (
+        <Pressable
+          onPress={onLockedPress}
+          accessibilityRole="button"
+          accessibilityLabel={`他 ${lockedCount} 人を見るには Pro が必要です`}
+        >
+          <View style={[styles.row, styles.lockedRow]}>
+            <Text style={styles.name}>●●●●</Text>
+            <View style={styles.rowRight}>
+              <Text style={styles.amount}>¥●,●●●</Text>
+              <Text style={styles.meta}>●回 ・ 平均 ¥●,●●●</Text>
+            </View>
+          </View>
+
+          <Text style={styles.locked}>他 {lockedCount} 人 — Pro で全員表示</Text>
+        </Pressable>
+      )}
     </View>
   );
 }
@@ -155,5 +186,7 @@ const styles = StyleSheet.create({
   rowRight: { alignItems: 'flex-end' },
   amount: { fontSize: 15, fontWeight: '600', color: '#18181B' },
   meta: { fontSize: 12, color: '#71717A' },
-  locked: { paddingTop: 10, fontSize: 13, color: '#71717A' },
+  sortLabelLocked: { color: '#A1A1AA' },
+  lockedRow: { opacity: 0.35 },
+  locked: { paddingTop: 8, fontSize: 13, fontWeight: '600', color: '#1D4ED8' },
 });

@@ -1,5 +1,7 @@
 import { useCallback, useState } from 'react';
 
+import { useIsPro } from '@/store/use-app-store';
+
 import type { CompanionSortKey } from '@/types/analytics';
 
 type UseCompanionRankingControlsResult = {
@@ -7,6 +9,8 @@ type UseCompanionRankingControlsResult = {
   minVisitsOnly: boolean;
   setSortKey: (key: CompanionSortKey) => void;
   setMinVisitsOnly: (value: boolean) => void;
+  /** 平均額ソートが Pro 限定でロックされているか（要件定義 §5.2）。 */
+  averageSortLocked: boolean;
 };
 
 /**
@@ -20,21 +24,28 @@ type UseCompanionRankingControlsResult = {
  * （片方の操作がもう片方に漏れないようにするため）。
  */
 export function useCompanionRankingControls(): UseCompanionRankingControlsResult {
+  const isPro = useIsPro();
   const [sortKey, setSortKeyState] = useState<CompanionSortKey>('total');
   const [minVisitsOnly, setMinVisitsOnlyState] = useState(false);
   // 利用者がフィルタを手で触ったかどうか
   const [filterTouched, setFilterTouched] = useState(false);
 
+  const averageSortLocked = !isPro;
+
   const setSortKey = useCallback(
     (next: CompanionSortKey) => {
-      // Phase 3: 平均単価ソートは Pro 限定なので、ここで判定を挟む
+      // 平均単価ソートは Pro 限定。無料版では状態を変えず、画面側が Paywall へ誘導する
+      if (next === 'average' && averageSortLocked) {
+        return;
+      }
+
       setSortKeyState(next);
 
       if (!filterTouched) {
         setMinVisitsOnlyState(next === 'average');
       }
     },
-    [filterTouched],
+    [filterTouched, averageSortLocked],
   );
 
   const setMinVisitsOnly = useCallback((next: boolean) => {
@@ -42,5 +53,5 @@ export function useCompanionRankingControls(): UseCompanionRankingControlsResult
     setFilterTouched(true);
   }, []);
 
-  return { sortKey, minVisitsOnly, setSortKey, setMinVisitsOnly };
+  return { sortKey, minVisitsOnly, setSortKey, setMinVisitsOnly, averageSortLocked };
 }

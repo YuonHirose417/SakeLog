@@ -1,12 +1,19 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { deleteRecord, findRecentRecords } from '@/repositories/record-repository';
+import {
+  countRecordsBeforeMonth,
+  deleteRecord,
+  findRecentRecords,
+} from '@/repositories/record-repository';
 
+import { freeHistoryCutoffMonth } from '@/features/billing/plan-limits';
 import { groupRecordsByDate } from '@/features/records/group-records';
 import { restoreRecord } from '@/features/records/use-edit-record';
 import type { RecordSection } from '@/features/records/group-records';
 
-import { useBumpDataRevision, useDataRevision } from '@/store/use-app-store';
+import { useDataRevision, useBumpDataRevision, useIsPro } from '@/store/use-app-store';
+
+import { toMonthKey } from '@/lib/datetime';
 
 import type { SpendingRecordWithCompanions } from '@/types/record';
 
@@ -19,6 +26,8 @@ type UseRecordListResult = {
   hasMore: boolean;
   error: string | null;
   loadMore: () => void;
+  /** 無料版で隠れている古い記録の件数。0 ならロック行を出さない。 */
+  lockedOlderCount: number;
   /** 1件削除する。復元に使うスナップショットを返す。 */
   remove: (record: SpendingRecordWithCompanions) => Promise<boolean>;
   /** 削除を取り消して作り直す。 */
@@ -28,10 +37,18 @@ type UseRecordListResult = {
 /**
  * 履歴一覧。日付降順で取得し、末尾に達したら追加読み込みする。
  * `dataRevision` を購読しているので、記録の作成・編集・削除で自動的に引き直される。
+ *
+ * 無料版は直近3ヶ月までしか読み込まない（要件定義 §5.2）。
+ * 制限がかかるのは**閲覧だけ**で、記録の作成・編集・削除は無料でも無制限。
  */
 export function useRecordList(): UseRecordListResult {
   const dataRevision = useDataRevision();
   const bumpDataRevision = useBumpDataRevision();
+  const isPro = useIsPro();
+
+  // 無料版は直近3ヶ月のみ。Pro は undefined（＝全期間）
+  const sinceMonth = isPro ? undefined : freeHistoryCutoffMonth(toMonthKey(new Date()));
+  const [lockedOlderCount, setLockedOlderCount] = useState(0);
 
   const [records, setRecords] = useState<SpendingRecordWithCompanions[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,7 +81,7 @@ export function useRecordList(): UseRecordListResult {
       setError(null);
 
       try {
-        const rows = await findRecentRecords(PAGE_SIZE, page * PAGE_SIZE);
+        const rows = await findRecentRecords(PAGE_SIZE, page * PAGE_SIZE, sinceMonth);
 
         if (cancelled) {
           return;
@@ -72,6 +89,14 @@ export function useRecordList(): UseRecordListResult {
 
         setRecords((previous) => (page === 0 ? rows : [...previous, ...rows]));
         setHasMore(rows.length === PAGE_SIZE);
+
+        // 無料版のときだけ、隠れている古い記録の件数を数える
+        const hiddenCount =
+          sinceMonth === undefined ? 0 : await countRecordsBeforeMonth(sinceMonth);
+
+        if (!cancelled) {
+          setLockedOlderCount(hiddenCount);
+        }
       } catch (cause: unknown) {
         if (!cancelled) {
           setError(cause instanceof Error ? cause.message : '読み込みに失敗しました');
@@ -89,7 +114,7 @@ export function useRecordList(): UseRecordListResult {
     return () => {
       cancelled = true;
     };
-  }, [page, dataRevision]);
+  }, [page, dataRevision, sinceMonth]);
 
   const loadMore = useCallback(() => {
     if (loading || loadingMore || !hasMore) {
@@ -133,6 +158,7 @@ export function useRecordList(): UseRecordListResult {
     hasMore,
     error,
     loadMore,
+    lockedOlderCount,
     remove,
     restore,
   };

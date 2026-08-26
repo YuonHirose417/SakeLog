@@ -2,6 +2,7 @@ import { ActivityIndicator, Pressable, SectionList, StyleSheet, Text, View } fro
 
 import { router } from 'expo-router';
 
+import { FREE_HISTORY_MONTHS } from '@/features/billing/plan-limits';
 import { useRecordList } from '@/features/records/use-record-list';
 
 import { EmptyState } from '@/components/EmptyState';
@@ -14,7 +15,8 @@ import { CATEGORY_LABELS, DRINK_TYPE_LABELS } from '@/lib/labels';
 import type { SpendingRecordWithCompanions } from '@/types/record';
 
 export default function HistoryScreen() {
-  const { sections, loading, loadingMore, error, loadMore, remove, restore } = useRecordList();
+  const { sections, loading, loadingMore, error, loadMore, lockedOlderCount, remove, restore } =
+    useRecordList();
   const { showToast } = useToast();
 
   const handleDelete = async (record: SpendingRecordWithCompanions) => {
@@ -99,7 +101,24 @@ export default function HistoryScreen() {
             </Pressable>
           </SwipeToDeleteRow>
         )}
-        ListFooterComponent={loadingMore ? <ActivityIndicator style={styles.footer} /> : null}
+        ListFooterComponent={
+          loadingMore ? (
+            <ActivityIndicator style={styles.footer} />
+          ) : lockedOlderCount > 0 ? (
+            // 無料版は直近3ヶ月まで。タップして初めて Paywall へ進む（要件定義 §5.3）
+            <Pressable
+              onPress={() => router.push('/paywall')}
+              style={styles.lockedRow}
+              accessibilityRole="button"
+              accessibilityLabel={`これ以前の${lockedOlderCount}件を見るには Pro が必要です`}
+            >
+              <Text style={styles.lockedTitle}>これ以前の記録は Pro で表示できます</Text>
+              <Text style={styles.lockedMeta}>
+                直近{FREE_HISTORY_MONTHS}ヶ月より前に {lockedOlderCount} 件あります
+              </Text>
+            </Pressable>
+          ) : null
+        }
       />
     </View>
   );
@@ -151,4 +170,16 @@ const styles = StyleSheet.create({
   rowMeta: { flexShrink: 1, marginLeft: 12, fontSize: 13, color: '#71717A', textAlign: 'right' },
   rowMemo: { fontSize: 12, color: '#A1A1AA' },
   footer: { paddingVertical: 16 },
+  lockedRow: {
+    gap: 4,
+    marginTop: 12,
+    marginHorizontal: 20,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E4E4E7',
+    backgroundColor: '#FAFAFA',
+  },
+  lockedTitle: { fontSize: 14, fontWeight: '600', color: '#18181B' },
+  lockedMeta: { fontSize: 12, color: '#71717A' },
 });
