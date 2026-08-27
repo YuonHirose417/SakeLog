@@ -271,9 +271,9 @@ ORDER BY month;
 ### 5.1 課金モデル
 **買い切り（Non-Consumable）**
 
-- Product ID：`com.<yourname>.sakelog.pro`
+- Product ID：`com.yuonhirose.sakelog.pro`
 - RevenueCat Entitlement 名：`pro`
-- 価格：1,200円（ローンチ時に安くしすぎない）
+- 価格：500円
 
 ### 5.2 無料 / 有料の切り分け
 

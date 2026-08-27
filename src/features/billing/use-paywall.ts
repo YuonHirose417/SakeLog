@@ -15,7 +15,7 @@ import type { PurchasesPackage } from 'react-native-purchases';
 export type RestoreOutcome = 'restored' | 'not-found' | 'error';
 
 type UsePaywallResult = {
-  /** ストアから取得した価格表示（'¥480' など）。取得できなければ null。 */
+  /** ストアから取得した価格表示（'¥500' など）。取得できなければ null。 */
   priceLabel: string | null;
   loading: boolean;
   /** 購入・復元の実行中。 */
