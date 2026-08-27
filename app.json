@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "SakeLog",
+    "name": "飲み代家計簿",
     "slug": "sakelog",
     "version": "1.0.0",
     "scheme": "sakelog",
@@ -11,7 +11,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.yuonhirose.sakelog",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleDisplayName": "飲み代"
       }
     },
     "android": {

@@ -45,7 +45,7 @@ export default function SettingsScreen() {
         </Pressable>
       </View>
 
-      <Text style={styles.sectionLabel}>SakeLog Pro</Text>
+      <Text style={styles.sectionLabel}>Pro版</Text>
 
       <View style={styles.group}>
         <Pressable

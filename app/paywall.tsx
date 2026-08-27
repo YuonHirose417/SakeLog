@@ -18,15 +18,18 @@ import { useToast } from '@/components/ToastProvider';
 
 import { useIsPro } from '@/store/use-app-store';
 
-/** Pro で解放される機能（要件定義 §5.2）。 */
+/**
+ * Pro で解放される機能（要件定義 §5.2）。
+ *
+ * **実装済みの機能だけを載せること。** 未実装の機能を並べると、
+ * 購入しても使えない機能を宣伝することになる。
+ * 追加予定の機能は要件定義 §5.2「将来のアップデート予定」を参照。
+ */
 const PRO_FEATURES: readonly string[] = [
   '履歴を全期間さかのぼって閲覧',
   '人別集計を全件表示',
   '1回あたり平均額での並び替え',
   '年次サマリー',
-  'カテゴリ × 人 のクロス分析',
-  'CSV エクスポート',
-  '予算の複数設定',
 ];
 
 export default function PaywallScreen() {
@@ -40,7 +43,7 @@ export default function PaywallScreen() {
 
     if (purchased) {
       router.back();
-      showToast({ message: 'SakeLog Pro を購入しました', durationMs: 3000 });
+      showToast({ message: '飲み代家計簿 Pro を購入しました', durationMs: 3000 });
     }
   };
 
@@ -71,7 +74,7 @@ export default function PaywallScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>SakeLog Pro</Text>
+        <Text style={styles.title}>飲み代家計簿 Pro</Text>
         <Text style={styles.lead}>
           買い切りです。月額の請求はありません。
           {'\n'}
