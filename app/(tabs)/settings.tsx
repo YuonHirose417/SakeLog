@@ -1,4 +1,4 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
@@ -8,6 +8,8 @@ import { usePaywall } from '@/features/billing/use-paywall';
 import { useToast } from '@/components/ToastProvider';
 
 import { useIsPro } from '@/store/use-app-store';
+
+import { HEALTH_DRINKING_GUIDELINE_URL } from '@/lib/external-links';
 
 export default function SettingsScreen() {
   const isPro = useIsPro();
@@ -71,7 +73,32 @@ export default function SettingsScreen() {
         </Pressable>
       </View>
 
-      {/* プリセット管理・同行者管理・注意喚起リンクは後続フェーズで追加する */}
+      <Text style={styles.sectionLabel}>お酒との付き合い方</Text>
+
+      <View style={styles.group}>
+        {/*
+          要件定義 §8 の「飲酒に関する注意喚起へのリンク」。
+          飲酒を推奨も否定もせず、公的な情報の所在を示すだけに留める（CLAUDE.md §7）。
+        */}
+        <Pressable
+          onPress={() => void Linking.openURL(HEALTH_DRINKING_GUIDELINE_URL)}
+          style={styles.row}
+          accessibilityRole="link"
+          accessibilityLabel="健康に配慮した飲酒に関するガイドライン（厚生労働省）を開く"
+        >
+          <View style={styles.rowText}>
+            <Text style={styles.rowLabel}>健康に配慮した飲酒に関するガイドライン</Text>
+            <Text style={styles.rowSubLabel}>厚生労働省</Text>
+          </View>
+          <Ionicons name="open-outline" size={18} color="#A1A1AA" />
+        </Pressable>
+      </View>
+
+      <Text style={styles.note}>
+        飲酒による健康への影響について、厚生労働省が目安をまとめています。
+      </Text>
+
+      {/* プリセット管理・同行者管理は後続フェーズで追加する */}
     </ScrollView>
   );
 }
@@ -94,6 +121,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   rowBordered: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#E4E4E7' },
+  rowText: { flexShrink: 1, gap: 2, paddingRight: 12 },
   rowLabel: { fontSize: 15, color: '#18181B' },
+  rowSubLabel: { fontSize: 12, color: '#71717A' },
   rowLabelDisabled: { color: '#A1A1AA' },
+  note: { paddingHorizontal: 4, fontSize: 12, lineHeight: 18, color: '#71717A' },
 });
