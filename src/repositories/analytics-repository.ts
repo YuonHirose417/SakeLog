@@ -19,8 +19,6 @@ import type { Category } from '@/types/record';
 type SummaryRow = {
   total_amount: number;
   record_count: number;
-  home_amount: number;
-  out_amount: number;
 };
 
 type CategoryRow = {
@@ -43,15 +41,9 @@ type TrendRow = {
   total_amount: number;
 };
 
+/** 想定外の値は 'home' に倒す（v2 で全件変換済みなので通常は起こらない）。 */
 function toCategory(value: string): Category {
-  switch (value) {
-    case 'convenience':
-    case 'supermarket':
-    case 'bar':
-      return value;
-    default:
-      return 'other';
-  }
+  return value === 'out' ? 'out' : 'home';
 }
 
 function toCompanionStat(row: CompanionStatRow): CompanionStat {
@@ -80,11 +72,8 @@ export async function findMonthlySummary(month: string): Promise<MonthlySummary>
 
   const row = await db.getFirstAsync<SummaryRow>(
     `SELECT
-       COALESCE(SUM(amount), 0)                                                    AS total_amount,
-       COUNT(*)                                                                    AS record_count,
-       COALESCE(SUM(CASE WHEN category IN ('convenience', 'supermarket')
-                         THEN amount ELSE 0 END), 0)                               AS home_amount,
-       COALESCE(SUM(CASE WHEN category = 'bar' THEN amount ELSE 0 END), 0)         AS out_amount
+       COALESCE(SUM(amount), 0) AS total_amount,
+       COUNT(*)                 AS record_count
      FROM records
      WHERE strftime('%Y-%m', spent_at) = ?`,
     [month],
@@ -94,8 +83,6 @@ export async function findMonthlySummary(month: string): Promise<MonthlySummary>
     month,
     totalAmount: row?.total_amount ?? 0,
     recordCount: row?.record_count ?? 0,
-    homeAmount: row?.home_amount ?? 0,
-    outAmount: row?.out_amount ?? 0,
   };
 }
 
@@ -155,13 +142,16 @@ export async function findFirstRecordDate(): Promise<string | null> {
 export async function findCategoryBreakdown(month: string): Promise<CategoryBreakdown[]> {
   const db = await getDatabase();
 
+  // 生のカラム値ではなく正規化した値で集約する。
+  // 想定外の値が残っていても home に寄せて1行にまとめるため
+  // （生の値で GROUP BY すると、読み出し後の丸めで同じカテゴリが複数行になる）。
   const rows = await db.getAllAsync<CategoryRow>(
-    `SELECT category,
+    `SELECT CASE WHEN category = 'out' THEN 'out' ELSE 'home' END AS category,
             SUM(amount) AS total_amount,
             COUNT(*)    AS record_count
      FROM records
      WHERE strftime('%Y-%m', spent_at) = ?
-     GROUP BY category
+     GROUP BY 1
      ORDER BY total_amount DESC`,
     [month],
   );

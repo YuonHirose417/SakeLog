@@ -39,17 +39,11 @@ const RECORD_COLUMNS = `id, amount, category, drink_type, is_solo, memo, spent_a
 
 /**
  * SQLite の TEXT はスキーマ上 union を保証できないため、読み出し時に型を絞り込む。
- * 想定外の値が入っていた場合は 'other' に倒して画面を壊さない。
+ * 想定外の値が入っていた場合は 'home' に倒して画面を壊さない
+ * （マイグレーション v2 で全件変換済みなので通常は起こらない）。
  */
 function toCategory(value: string): SpendingRecord['category'] {
-  switch (value) {
-    case 'convenience':
-    case 'supermarket':
-    case 'bar':
-      return value;
-    default:
-      return 'other';
-  }
+  return value === 'out' ? 'out' : 'home';
 }
 
 function toDrinkType(value: string | null): SpendingRecord['drinkType'] {

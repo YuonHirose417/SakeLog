@@ -104,7 +104,7 @@ export function RecordForm({
   };
 
   // 外飲みのときは常に見せる。誰かを選んでいる場合も、折りたたみに隠れないよう常に見せる。
-  const showCompanionInline = category === 'bar' || companionNames.length > 0;
+  const showCompanionInline = category === 'out' || companionNames.length > 0;
 
   // 「誰と」と「一人で飲んだ」は相互排他なので、同じ視界に並べて置く。
   // 配置が任意項目の中に移るときも、この2つは一緒に移動する。

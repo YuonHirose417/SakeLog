@@ -10,7 +10,7 @@
 
 ### 1.2 コンセプト
 お酒に使ったお金だけに特化した家計簿アプリ。
-コンビニ酒・スーパー酒・外飲みを一元管理し、**節約を支援する**。
+宅飲み・外飲みを一元管理し、**節約を支援する**。
 
 ### 1.3 差別化ポイント
 - お酒の支出だけに絞ることで、入力項目が極小になり継続しやすい
@@ -59,7 +59,7 @@ npx eas-cli build --profile development --platform ios
 CREATE TABLE records (
   id          INTEGER PRIMARY KEY AUTOINCREMENT,
   amount      INTEGER NOT NULL,          -- 円（整数）
-  category    TEXT    NOT NULL,          -- 'convenience' | 'supermarket' | 'bar' | 'other'
+  category    TEXT    NOT NULL,          -- 'home'（宅飲み） | 'out'（外飲み）
   drink_type  TEXT,                      -- 'beer' | 'sake' | 'wine' | 'highball' | 'other'
   is_solo     INTEGER NOT NULL DEFAULT 0,-- 1 = 一人で飲んだ
   memo        TEXT,
@@ -149,7 +149,7 @@ CREATE TABLE presets (
 | 項目 | 必須 | 備考 |
 |---|---|---|
 | 金額 | ○ | 数値キーパッド。デフォルトフォーカス |
-| カテゴリ | ○ | コンビニ / スーパー / 外飲み / その他 |
+| カテゴリ | ○ | 宅飲み / 外飲み の2択 |
 | 日付 | ○ | デフォルト＝今日。変更可 |
 | 酒種 | × | 任意 |
 | 誰と | × | 後述 |
@@ -210,8 +210,8 @@ ON CONFLICT(name) DO UPDATE SET
 
 #### 月次サマリー
 - 合計金額、記録件数
-- カテゴリ別内訳（円グラフ or 横棒グラフ）
-- 宅飲み（convenience + supermarket）vs 外飲み（bar）の比率
+- 宅飲み（`home`）vs 外飲み（`out`）の内訳（横棒グラフ）
+  - カテゴリが2択なので、カテゴリ別内訳と宅飲み/外飲み比率は同一。1つのカードに統合している
 - 前月比の増減
 
 #### 人別集計（差別化の核）
@@ -368,8 +368,7 @@ Entitlement を複数持てる構造にしておく（買い切りは後から�
 
 ### 6.3 分析
 - 月次サマリー（グラフ）
-- カテゴリ別内訳
-- 宅飲み / 外飲み比率
+- 宅飲み / 外飲みの内訳
 - 人別ランキング（無料は上位3人、以降ぼかし）
 - 年次サマリータブ（Pro）
 

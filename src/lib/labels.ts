@@ -7,10 +7,8 @@ import type { Category, DrinkType } from '@/types/record';
  */
 
 export const CATEGORY_LABELS: Readonly<Record<Category, string>> = {
-  convenience: 'コンビニ',
-  supermarket: 'スーパー',
-  bar: '外飲み',
-  other: 'その他',
+  home: '宅飲み',
+  out: '外飲み',
 };
 
 export const DRINK_TYPE_LABELS: Readonly<Record<DrinkType, string>> = {
@@ -26,12 +24,10 @@ export type Option<T> = {
   label: string;
 };
 
-/** 記録画面のカテゴリ4択。並び順は要件定義 §4.1 に合わせる。 */
+/** 記録画面のカテゴリ2択（要件定義 §4.1）。 */
 export const CATEGORY_OPTIONS: readonly Option<Category>[] = [
-  { value: 'convenience', label: CATEGORY_LABELS.convenience },
-  { value: 'supermarket', label: CATEGORY_LABELS.supermarket },
-  { value: 'bar', label: CATEGORY_LABELS.bar },
-  { value: 'other', label: CATEGORY_LABELS.other },
+  { value: 'home', label: CATEGORY_LABELS.home },
+  { value: 'out', label: CATEGORY_LABELS.out },
 ];
 
 export const DRINK_TYPE_OPTIONS: readonly Option<DrinkType>[] = [

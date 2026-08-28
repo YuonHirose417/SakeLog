@@ -12,15 +12,9 @@ type PresetRow = {
   sort_order: number;
 };
 
+/** 想定外の値は 'home' に倒す（v2 で全件変換済みなので通常は起こらない）。 */
 function toCategory(value: string): Category {
-  switch (value) {
-    case 'convenience':
-    case 'supermarket':
-    case 'bar':
-      return value;
-    default:
-      return 'other';
-  }
+  return value === 'out' ? 'out' : 'home';
 }
 
 function toDrinkType(value: string | null): DrinkType | null {

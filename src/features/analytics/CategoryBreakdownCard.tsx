@@ -9,19 +9,22 @@ import type { CategoryBreakdown } from '@/types/analytics';
 import type { Category } from '@/types/record';
 
 const CATEGORY_COLORS: Readonly<Record<Category, string>> = {
-  convenience: '#1D4ED8',
-  supermarket: '#0F766E',
-  bar: '#B45309',
-  other: '#71717A',
+  home: '#0F766E',
+  out: '#B45309',
 };
 
-/** カテゴリ別内訳（要件定義 §4.4）。金額の大きい順に横棒で示す。 */
+/**
+ * 宅飲み / 外飲みの内訳（要件定義 §4.4）。金額の大きい順に横棒で示す。
+ *
+ * カテゴリが2択になり、旧「カテゴリ別内訳」と旧「宅飲み/外飲み比率」が
+ * 同じデータになったため、このカードに一本化している。
+ */
 export function CategoryBreakdownCard({ breakdown }: { breakdown: CategoryBreakdown[] }) {
   const total = breakdown.reduce((sum, item) => sum + item.totalAmount, 0);
 
   return (
     <View style={styles.card}>
-      <Text style={styles.heading}>カテゴリ別</Text>
+      <Text style={styles.heading}>宅飲み / 外飲み</Text>
 
       {breakdown.map((item) => (
         <View key={item.category} style={styles.row}>

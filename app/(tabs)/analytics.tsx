@@ -7,7 +7,6 @@ import { router } from 'expo-router';
 
 import { CategoryBreakdownCard } from '@/features/analytics/CategoryBreakdownCard';
 import { CompanionRankingCard } from '@/features/analytics/CompanionRankingCard';
-import { HomeOutRatioCard } from '@/features/analytics/HomeOutRatioCard';
 import { MonthlySummaryCard } from '@/features/analytics/MonthlySummaryCard';
 import { MonthlyTrendCard } from '@/features/analytics/MonthlyTrendCard';
 import { YearlySummaryCard } from '@/features/analytics/YearlySummaryCard';
@@ -86,7 +85,6 @@ function MonthlyTab() {
         <>
           <MonthlySummaryCard summary={summary} />
           <CategoryBreakdownCard breakdown={breakdown} />
-          <HomeOutRatioCard summary={summary} />
         </>
       )}
 

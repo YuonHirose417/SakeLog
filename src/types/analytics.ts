@@ -6,10 +6,6 @@ export type MonthlySummary = {
   month: string;
   totalAmount: number;
   recordCount: number;
-  /** 宅飲み（convenience + supermarket）の合計 */
-  homeAmount: number;
-  /** 外飲み（bar）の合計 */
-  outAmount: number;
 };
 
 /** 日別の合計。ストリーク判定に使う。記録のある日だけ返る。 */

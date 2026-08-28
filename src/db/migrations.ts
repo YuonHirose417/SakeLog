@@ -82,6 +82,23 @@ const MIGRATIONS: readonly Migration[] = [
       }
     },
   },
+  {
+    // カテゴリを4択から2択に統合する。
+    // convenience / supermarket / other → home、bar → out。
+    //
+    // 順序が重要：先に bar を out にしてから、「out 以外」をまとめて home に倒す。
+    // こうすると想定外の値が入っていても取りこぼさない。
+    //
+    // v1 のシードプリセット（convenience）もここで home に変換される。
+    // v1 側を書き換えないのは、既存マイグレーションを改変しないため（CLAUDE.md §6）。
+    version: 2,
+    up: async (db) => {
+      await db.runAsync("UPDATE records SET category = 'out'  WHERE category = 'bar'");
+      await db.runAsync("UPDATE records SET category = 'home' WHERE category <> 'out'");
+      await db.runAsync("UPDATE presets SET category = 'out'  WHERE category = 'bar'");
+      await db.runAsync("UPDATE presets SET category = 'home' WHERE category <> 'out'");
+    },
+  },
 ];
 
 /** 現在のスキーマバージョン。マイグレーション定義の最大値。 */

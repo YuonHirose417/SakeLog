@@ -1,13 +1,16 @@
 import type { Companion } from '@/types/companion';
 
-/** 支出カテゴリ。DB では records.category に TEXT で保存する。 */
-export type Category = 'convenience' | 'supermarket' | 'bar' | 'other';
+/**
+ * 支出カテゴリ。DB では records.category に TEXT で保存する。
+ *
+ * 以前は convenience / supermarket / bar / other の4択だったが、
+ * 集計ではどちらにせよ宅飲み・外飲みに丸めており分ける実益が無かったため、
+ * マイグレーション v2 で2択に統合した（convenience/supermarket/other → home、bar → out）。
+ */
+export type Category = 'home' | 'out';
 
 /** 酒種。任意項目のため null を取りうる。 */
 export type DrinkType = 'beer' | 'sake' | 'wine' | 'highball' | 'other';
-
-/** 宅飲み扱いのカテゴリ（要件定義 §4.4 の宅飲み / 外飲み比率で使う）。 */
-export const HOME_CATEGORIES: readonly Category[] = ['convenience', 'supermarket'];
 
 /**
  * 支出記録。
