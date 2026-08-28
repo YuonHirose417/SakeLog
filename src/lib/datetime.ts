@@ -71,6 +71,19 @@ export function shiftMonth(month: string, delta: number): string {
   return `${date.getFullYear()}-${`${date.getMonth() + 1}`.padStart(2, '0')}`;
 }
 
+/**
+ * 指定した日付（'YYYY-MM-DD'）＋現在の時刻で spent_at 形式の文字列を作る。
+ * カレンダーで日付を選んで新規記録を開くときに使う。
+ */
+export function localIsoOnDate(dateKey: string): string {
+  return `${dateKey}T${toLocalIso(new Date()).slice(11)}`;
+}
+
+/** 'YYYY-MM-DD' の形式かどうか。外部から渡された値の検証に使う。 */
+export function isDateKey(value: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value);
+}
+
 /** 年キー 'YYYY' を delta 年ずらす。 */
 export function shiftYear(year: string, delta: number): string {
   return `${Number(year) + delta}`;

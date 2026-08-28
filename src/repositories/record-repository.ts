@@ -314,6 +314,21 @@ export async function findRecentRecords(
   return attachCompanions(db, rows.map(toRecord));
 }
 
+/** 指定日（'YYYY-MM-DD'）の記録を新しい順に返す。カレンダーで日を選んだときに使う。 */
+export async function findRecordsByDate(date: string): Promise<SpendingRecordWithCompanions[]> {
+  const db = await getDatabase();
+
+  const rows = await db.getAllAsync<RecordRow>(
+    `SELECT ${RECORD_COLUMNS}
+     FROM records
+     WHERE substr(spent_at, 1, 10) = ?
+     ORDER BY spent_at DESC, id DESC`,
+    [date],
+  );
+
+  return attachCompanions(db, rows.map(toRecord));
+}
+
 /**
  * 指定月より前の記録の件数。
  * 無料版のロック行に「これ以前の N 件」を出すために使う。
