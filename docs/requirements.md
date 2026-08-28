@@ -5,7 +5,6 @@
 ### 1.1 アプリ名
 飲み代家計簿
 
-- iOS のホーム画面での表示名（`CFBundleDisplayName`）は「飲み代」
 - リポジトリ名・slug・bundleIdentifier・GitHub Pages の URL は内部識別子として `SakeLog` / `sakelog` のまま
 
 ### 1.2 コンセプト

@@ -12,8 +12,7 @@
       "icon": "./assets/icon.png",
       "bundleIdentifier": "com.yuonhirose.sakelog",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false,
-        "CFBundleDisplayName": "飲み代"
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
