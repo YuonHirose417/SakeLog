@@ -47,6 +47,19 @@ export default function SettingsScreen() {
         </Pressable>
       </View>
 
+      <Text style={styles.sectionLabel}>記録</Text>
+
+      <View style={styles.group}>
+        <Pressable
+          onPress={() => router.push('/settings/presets')}
+          style={styles.row}
+          accessibilityRole="button"
+        >
+          <Text style={styles.rowLabel}>よく買う酒の管理</Text>
+          <Ionicons name="chevron-forward" size={18} color="#A1A1AA" />
+        </Pressable>
+      </View>
+
       <Text style={styles.sectionLabel}>Pro版</Text>
 
       <View style={styles.group}>

@@ -21,6 +21,7 @@ export default function RootLayout() {
             <Stack.Screen name="record/new" options={{ presentation: 'modal' }} />
             <Stack.Screen name="record/[id]" options={{ presentation: 'modal' }} />
             <Stack.Screen name="settings/budget" />
+            <Stack.Screen name="settings/presets" />
             <Stack.Screen name="paywall" options={{ presentation: 'modal' }} />
           </Stack>
           <StatusBar style="auto" />
