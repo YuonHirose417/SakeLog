@@ -4,6 +4,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Link, router } from 'expo-router';
 
 import { useBudgetOverview } from '@/features/budget/use-budget-overview';
+import { RecentRecordsSection } from '@/features/records/RecentRecordsSection';
 import { useCreateRecord } from '@/features/records/use-create-record';
 import { usePresets } from '@/features/records/use-presets';
 import type { BudgetOverview } from '@/features/budget/use-budget-overview';
@@ -83,6 +84,8 @@ export default function HomeScreen() {
             </ScrollView>
           </View>
         )}
+
+        <RecentRecordsSection />
       </ScrollView>
 
       <Link href="/record/new" asChild>
